@@ -32,7 +32,7 @@ FROM base AS builder
 RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=shared \
   --mount=type=cache,id=apt-lists,target=/var/lib/apt/lists,sharing=shared \
   apt-get update \
-  && apt-get install -y --no-install-recommends python3 make g++ \
+  && apt-get install -y --no-install-recommends python3 make g++ gcc libc-dev \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
@@ -57,7 +57,8 @@ RUN test -f package-lock.json \
   || (echo "package-lock.json is required for reproducible Docker builds" >&2 && exit 1)
 RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
   npm ci --no-audit --no-fund --legacy-peer-deps --ignore-scripts \
-  && npm rebuild better-sqlite3 \
+  && npm config set python /usr/bin/python3 \
+  && (cd node_modules/better-sqlite3 && npx node-gyp rebuild) \
   && node -e "require('better-sqlite3')(':memory:').close()"
 
 # Build with Turbopack (stable in Next 16, the repo default). The v3.8.27-era
