@@ -166,6 +166,7 @@ const nextConfig = {
       "next-intl",
     ],
   },
+  networkIdentifiers: false,
   outputFileTracingRoot: projectRoot,
   outputFileTracingIncludes: {
     // Migration SQL and compression rule/filter JSON files are read via fs at
@@ -247,6 +248,12 @@ const nextConfig = {
     // TODO: Re-enable after fixing all sub-component useTranslations scope issues
     ignoreBuildErrors: true,
   },
+  // ── 关键修改加在这里 ──────────────────────────────────────────────────────────
+  eslint: {
+    // 允许在生产环境构建时跳过 ESLint 语法检查（大幅降低打包时的进程内存占用）
+    ignoreDuringBuilds: true,
+  },
+  // ─────────────────────────────────────────────────────────────────────────────
   webpack(config, { webpack }) {
     config.ignoreWarnings = [
       ...(config.ignoreWarnings || []),
