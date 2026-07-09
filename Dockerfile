@@ -73,6 +73,11 @@ ENV OMNIROUTE_USE_TURBOPACK=0
 ENV NEXT_DISABLE_SOURCEMAPS=1
 ENV NODE_ENV=production
 
+# 强行关闭 Next.js 编译时的多线程，只允许单线程运行（极其省内存）
+ENV NEXT_CPU_PROF=false
+ENV CPUS=1
+ENV NEXT_TELEMETRY_DISABLED=1
+
 # Docker containers cannot run the MITM/Agent-Bridge stack (no host DNS/cert
 # access), so keep @/mitm/manager on the graceful stub (#3390). This flag is
 # Docker-only: npm/Electron/VPS builds must bundle the REAL manager (#6344).
@@ -87,9 +92,9 @@ ENV OMNIROUTE_MITM_STUB=1
 # child (build-next-isolated.mjs → resolveNextBuildEnv spreads process.env).
 # Build-only; the runtime heap is set separately on the runner stage
 # (OMNIROUTE_MEMORY_MB). Override: `--build-arg OMNIROUTE_BUILD_MEMORY_MB=6144`.
-# 降低虚拟机的堆内存上限，契合低配容器，同时配置更激进的垃圾回收
-ARG OMNIROUTE_BUILD_MEMORY_MB=1024
-ENV NODE_OPTIONS="--max-old-space-size=${OMNIROUTE_BUILD_MEMORY_MB} --optimize-for-size --gc-interval=100"
+# 调整堆上限至 1.5GB（利用临时的构建缓冲），并使用最激进的垃圾回收及精简空间配置
+ARG OMNIROUTE_BUILD_MEMORY_MB=1536
+ENV NODE_OPTIONS="--max-old-space-size=${OMNIROUTE_BUILD_MEMORY_MB} --optimize-for-size --gc-interval=50"
 
 COPY . ./
 RUN --mount=type=cache,id=next-cache,target=/app/.build/next/cache \
@@ -158,7 +163,7 @@ CMD ["node", "dev/run-standalone.mjs"]
 # ── Runner Web (web-cookie providers: Gemini Web, Claude Turnstile) ───────────
 #
 #  Two image flavors:
-#    runner-base  →  omniroute:VERSION        Lean base (~500 MB). No browsers.
+#    runner-base  →  omniroute:VERSION    Lean base (~500 MB). No browsers.
 #    runner-web   →  omniroute:VERSION-web    +Chromium/Playwright (~800 MB).
 #
 #  Use runner-web when you need web-cookie providers (gemini-web, claude-web,
