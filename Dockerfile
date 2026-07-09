@@ -94,7 +94,7 @@ ENV OMNIROUTE_MITM_STUB=1
 # (OMNIROUTE_MEMORY_MB). Override: `--build-arg OMNIROUTE_BUILD_MEMORY_MB=6144`.
 # 调整堆上限至 1.5GB（利用临时的构建缓冲），并使用最激进的垃圾回收及精简空间配置
 ARG OMNIROUTE_BUILD_MEMORY_MB=1536
-ENV NODE_OPTIONS="--max-old-space-size=${OMNIROUTE_BUILD_MEMORY_MB} --optimize-for-size --gc-interval=50"
+ENV NODE_OPTIONS="--max-old-space-size=${OMNIROUTE_BUILD_MEMORY_MB}"
 
 COPY . ./
 RUN --mount=type=cache,id=next-cache,target=/app/.build/next/cache \
